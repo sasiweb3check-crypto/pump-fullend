@@ -1,0 +1,22 @@
+name: 24/7 Token Scanner
+
+on:
+  schedule:
+    # Runs every 1 minute
+    - cron: '*/1 * * * *'
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Scanner API (1/2)
+        run: |
+          curl -X POST https://scanner-serverless.vercel.app/api/scan -H "Content-Type: application/json"
+      
+      - name: Wait 30 seconds
+        run: sleep 30
+
+      - name: Trigger Scanner API (2/2)
+        run: |
+          curl -X POST https://scanner-serverless.vercel.app/api/scan -H "Content-Type: application/json"

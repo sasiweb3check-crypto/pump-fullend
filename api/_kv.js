@@ -77,10 +77,10 @@ async function kvIncr(key) {
 
 // ── Domain helpers ──────────────────────────────────────────────────────────────
 
-async function getCachedTokens()    { return kvGet(KEYS.CACHED_TOKENS) || []; }
+async function getCachedTokens()    { const res = await kvGet(KEYS.CACHED_TOKENS); return res || []; }
 async function setCachedTokens(t)   { return kvSet(KEYS.CACHED_TOKENS, t, TTL_TOKENS); }
 
-async function getDetectionMap()    { return kvGet(KEYS.DETECTION_MAP) || {}; }
+async function getDetectionMap()    { const res = await kvGet(KEYS.DETECTION_MAP); return res || {}; }
 async function setDetectionMap(m)   {
   // Prune to 500 entries
   const entries = Object.entries(m);

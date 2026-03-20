@@ -135,8 +135,8 @@ function NoKeyWarning() {
 
   const handleSave = () => {
     const k = keyInput.trim();
-    if (!k.startsWith('gsk_')) {
-      setError('Key should start with gsk_ — check console.groq.com/keys');
+    if (k.length < 20) {
+      setError('Invalid key — check together.ai settings');
       return;
     }
     window.__GROQ_KEY__ = k;
@@ -197,19 +197,19 @@ function NoKeyWarning() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
         <AlertTriangle size={13} color="#ffd700" />
         <span style={{ fontSize: '11px', color: '#ffd700', fontFamily: 'JetBrains Mono', fontWeight: '700' }}>
-          GROQ API KEY NEEDED
+          TOGETHER API KEY NEEDED
         </span>
       </div>
 
       {/* Inline key entry — works without redeploying */}
       <div style={{ marginBottom: '8px' }}>
         <div style={{ fontSize: '10px', color: '#5a7a94', fontFamily: 'JetBrains Mono', marginBottom: '5px' }}>
-          Paste your key below (free at console.groq.com/keys):
+          Paste your key below (free at together.ai):
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
           <input
             type="password"
-            placeholder="gsk_..."
+            placeholder="..."
             value={keyInput}
             onChange={e => { setKeyInput(e.target.value); setError(''); }}
             onKeyDown={e => e.key === 'Enter' && handleSave()}

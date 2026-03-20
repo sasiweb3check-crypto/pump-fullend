@@ -80,20 +80,42 @@ async function runScan() {
 
   const now = Date.now();
   let newCount = 0;
+  const newTokensToAlert = [];
 
   // Score + enrich each token
   const processed = validPairs.map(token => {
     const id           = token.pairAddress || token.baseToken?.address;
-    const currentPrice = parseFloat(token.priceUsd || 0);
-    const scoreResult  = scoreToken(token);
+    const currentMc    = parseFloat(token.fdv || 0);
 
     let detection = detectionMap[id];
     if (!detection) {
-      detection = { detectedAt: now, priceAtDetection: currentPrice, ath: currentPrice, athAt: now };
+      detection = {
+        detectedAt: now,
+        priceAtDetection: currentPrice,
+        mcAtDetection: currentMc,
+        ath: currentPrice,
+        athAt: now,
+        lastMultiplier: 1
+      };
       detectionMap[id] = detection;
-      if (!seenIds.has(id)) { newCount++; seenIds.add(id); }
-    } else if (currentPrice > detection.ath) {
-      detection = { ...detection, ath: currentPrice, athAt: now };
+      if (!seenIds.has(id)) {
+        newCount++;
+        seenIds.add(id);
+        newTokensToAlert.push({ ...token, _score: scoreResult, _id: id, _detectedMc: currentMc });
+      }
+    } else {
+      // Update ATH
+      if (currentPrice > detection.ath) {
+        detection.ath = currentPrice;
+        detection.athAt = now;
+      }
+      // Check Multipliers (2X, 3X, etc.)
+      const multiplier = Math.floor(currentPrice / detection.priceAtDetection);
+      if (multiplier > (detection.lastMultiplier || 1)) {
+        detection.lastMultiplier = multiplier;
+        newCount++; // Trigger a save
+        newTokensToAlert.push({ ...token, _score: scoreResult, _id: id, _multiplier: multiplier, _isUpdate: true });
+      }
       detectionMap[id] = detection;
     }
 
@@ -108,6 +130,7 @@ async function runScan() {
       _id:                 id,
       _detectedAt:         detection.detectedAt,
       _priceAtDetection:   detection.priceAtDetection,
+      _detectedMc:         detection.mcAtDetection,
       _ath:                detection.ath,
       _athAt:              detection.athAt,
       _gainSinceDetection: gainSinceDetection,
@@ -123,6 +146,40 @@ async function runScan() {
     setLastUpdate(now),
     newCount > 0 ? incrScanCount(newCount) : Promise.resolve(),
   ]);
+
+  // Send Telegram Alerts
+  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID && newTokensToAlert.length > 0) {
+    for (const t of newTokensToAlert) {
+      const isSOrA = t._score.total >= 62;
+      if (!isSOrA && !t._isUpdate) continue; // Only alert new S/A tokens, or updates for ANY tracked token
+
+      const ca = t.baseToken?.address || t._id;
+      const gmgnLink = `https://gmgn.ai/sol/token/${ca}`;
+      const dsLink   = `https://dexscreener.com/solana/${t.pairAddress || t._id}`;
+      
+      let msg = "";
+      if (t._isUpdate) {
+        msg = `🚀 *MOON MISSION: ${t._multiplier}X HIT* 🚀\n\n` +
+              `*Token:* ${t.baseToken?.name} (${t.baseToken?.symbol})\n` +
+              `*Current Gain:* +${(t._multiplier * 100).toLocaleString()}%\n` +
+              `*Market Cap:* $${parseFloat(t.fdv || 0).toLocaleString()}\n\n` +
+              `[GMGN](${gmgnLink}) | [DexS](${dsLink})`;
+      } else {
+        msg = `🚨 *NEW ${t._score.grade}-GRADE DETECTED* 🚨\n\n` +
+              `*Token:* ${t.baseToken?.name} (${t.baseToken?.symbol})\n` +
+              `*Score:* ${t._score.total}/100 (${t._score.grade})\n` +
+              `*MC at Detection:* $${parseFloat(t._detectedMc || 0).toLocaleString()}\n` +
+              `*CA:* \`${ca}\`\n\n` +
+              `[GMGN](${gmgnLink}) | [DexS](${dsLink})`;
+      }
+
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true })
+      }).catch(e => console.error('[scan] Telegram error:', e.message));
+    }
+  }
 
   console.log(`[scan] ✓ ${processed.length} tokens | ${newCount} new | ${now}`);
   return { total: processed.length, newCount, timestamp: now };
@@ -144,9 +201,21 @@ module.exports = async function handler(req, res) {
 
   try {
     const result = await runScan();
+    // Optional: Only alert success if there were actually new tokens or updates to keep it clean
+    if (result.newCount > 0 && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+       // We already sent individual token alerts, so maybe no need for a "Success" spam
+    }
     return res.status(200).json({ ok: true, ...result });
   } catch (e) {
     console.error('[scan] error:', e.message);
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+      const failMsg = `⚠️ *SCANNER ERROR* ⚠️\n\n\`${e.message}\`\n\nCheck Vercel logs for details.`;
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text: failMsg, parse_mode: 'Markdown' })
+      }).catch(() => {});
+    }
     return res.status(500).json({ ok: false, error: e.message });
   }
 };

@@ -193,7 +193,7 @@ export default function SettingsPage({ onSave }) {
   const [results, setResults] = useState({ groq: null, helius: null });
   const [clearConfirm, setClearConfirm] = useState(false);
 
-  const isGroqValid   = cfg.groqApiKey?.trim().startsWith('gsk_');
+  const isGroqValid   = cfg.groqApiKey?.trim().length > 20;
   const isHeliusValid = cfg.heliusApiKey?.trim().length > 20;
 
   function handleSave() {
@@ -281,9 +281,9 @@ export default function SettingsPage({ onSave }) {
 
       {/* Groq */}
       <div style={S.card}>
-        <div style={S.title}><Cpu size={14} color="#a78bfa" /> Groq AI — 8 Agent Engine</div>
-        <p style={S.sub}>Alerts, forecasts, AI chat, telegram hunter, guardian analysis. Free: 14,400 req/day.</p>
-        <ApiKeyInput label="Groq API Key" value={cfg.groqApiKey||''} onChange={v => setCfg(c=>({...c,groqApiKey:v}))} placeholder="gsk_..." helpUrl="https://console.groq.com/keys" helpText="Free at console.groq.com · llama-3.3-70b-versatile · no credit card" isValid={isGroqValid} />
+        <div style={S.title}><Cpu size={14} color="#a78bfa" /> Together AI — 8 Agent Engine</div>
+        <p style={S.sub}>Alerts, forecasts, AI chat, telegram hunter, guardian analysis. Free credit for Llama-3.3-70B.</p>
+        <ApiKeyInput label="Together API Key" value={cfg.groqApiKey||''} onChange={v => setCfg(c=>({...c,groqApiKey:v}))} placeholder="..." helpUrl="https://api.together.xyz/settings/api-keys" helpText="Free at together.ai · Llama-3.3-70B · no credit card" isValid={isGroqValid} />
         <div style={S.row}>
           <button onClick={testGroq} disabled={!cfg.groqApiKey?.trim()||testing.groq} style={S.btn('#a78bfa')}>
             {testing.groq ? <><RefreshCw size={10} style={{animation:'spin 1s linear infinite'}}/> Testing…</> : '⚡ Test connection'}
@@ -337,7 +337,7 @@ export default function SettingsPage({ onSave }) {
         <div style={{fontSize:'10px',color:'#5a7a94',fontFamily:'JetBrains Mono',fontWeight:'700',marginBottom:'14px',letterSpacing:'0.05em'}}>CONNECTION STATUS</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {[
-            { label:'Groq AI',           ok: hasGroqKey(),   detail:'AI agents',       badge: hasGroqKey()?'ACTIVE':'NOT SET',  bc: hasGroqKey()?'#a78bfa':'#3a5a74' },
+            { label:'Together AI',       ok: hasGroqKey(),   detail:'AI agents',       badge: hasGroqKey()?'ACTIVE':'NOT SET',  bc: hasGroqKey()?'#a78bfa':'#3a5a74' },
             { label:'Helius WS',         ok: hasHeliusKey(), detail:'Live detection',   badge: hasHeliusKey()?'ACTIVE':'NOT SET', bc: hasHeliusKey()?'#00ff8c':'#3a5a74' },
             { label:'DexScreener',       ok: true,           detail:'Token pairs',      badge:'FREE', bc:'#00d4ff' },
             { label:'RugCheck + GoPlus', ok: true,           detail:'Safety checks',    badge:'FREE', bc:'#00d4ff' },

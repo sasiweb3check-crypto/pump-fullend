@@ -1,10 +1,10 @@
-// Groq API client — free tier, llama-3.3-70b-versatile
+// Together AI client (Replaces Groq) — Free tier, Llama-3.3-70B
 // Keys come from user Settings (localStorage), not build-time env vars.
 
 import { getGroqKey, hasGroqKey } from '../utils/config';
 
-const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL    = 'llama-3.3-70b-versatile';
+const GROQ_API = 'https://api.together.xyz/v1/chat/completions';
+const MODEL    = 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
 
 export function hasApiKey() { return hasGroqKey(); }
 

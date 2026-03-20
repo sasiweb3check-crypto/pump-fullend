@@ -7,3 +7,5 @@ build/
 .env.test.local
 *.log
 .DS_Store
+
+.vercel
