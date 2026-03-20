@@ -29,7 +29,7 @@ export async function callGroq(systemPrompt, userMessage, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Groq HTTP ${res.status}`);
+    throw new Error(err?.error?.message || `Together AI HTTP ${res.status}`);
   }
   const data = await res.json();
   return data.choices?.[0]?.message?.content || '';
@@ -57,7 +57,7 @@ export async function* callGroqStream(systemPrompt, userMessage, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Groq HTTP ${res.status}`);
+    throw new Error(err?.error?.message || `Together AI HTTP ${res.status}`);
   }
 
   const reader  = res.body.getReader();

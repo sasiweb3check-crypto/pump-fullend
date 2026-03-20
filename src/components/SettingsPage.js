@@ -206,9 +206,9 @@ export default function SettingsPage({ onSave }) {
     if (!cfg.groqApiKey?.trim()) return;
     setTesting(t => ({ ...t, groq: true })); setResults(r => ({ ...r, groq: null }));
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch('https://api.together.xyz/v1/chat/completions', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.groqApiKey.trim()}` },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 5, messages: [{ role: 'user', content: 'Hi' }] }),
+        body: JSON.stringify({ model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', max_tokens: 5, messages: [{ role: 'user', content: 'Hi' }] }),
       });
       setResults(r => ({ ...r, groq: res.ok ? 'success' : 'fail' }));
     } catch { setResults(r => ({ ...r, groq: 'fail' })); }

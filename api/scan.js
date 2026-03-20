@@ -85,15 +85,17 @@ async function runScan() {
   // Score + enrich each token
   const processed = validPairs.map(token => {
     const id           = token.pairAddress || token.baseToken?.address;
-    const currentMc    = parseFloat(token.fdv || 0);
+    const cPrice       = parseFloat(token.priceUsd || 0);
+    const cMc          = parseFloat(token.fdv || 0);
+    const scoreResult  = scoreToken(token);
 
     let detection = detectionMap[id];
     if (!detection) {
       detection = {
         detectedAt: now,
-        priceAtDetection: currentPrice,
-        mcAtDetection: currentMc,
-        ath: currentPrice,
+        priceAtDetection: cPrice,
+        mcAtDetection: cMc,
+        ath: cPrice,
         athAt: now,
         lastMultiplier: 1
       };
@@ -101,16 +103,16 @@ async function runScan() {
       if (!seenIds.has(id)) {
         newCount++;
         seenIds.add(id);
-        newTokensToAlert.push({ ...token, _score: scoreResult, _id: id, _detectedMc: currentMc });
+        newTokensToAlert.push({ ...token, _score: scoreResult, _id: id, _detectedMc: cMc });
       }
     } else {
       // Update ATH
-      if (currentPrice > detection.ath) {
-        detection.ath = currentPrice;
+      if (cPrice > detection.ath) {
+        detection.ath = cPrice;
         detection.athAt = now;
       }
       // Check Multipliers (2X, 3X, etc.)
-      const multiplier = Math.floor(currentPrice / detection.priceAtDetection);
+      const multiplier = Math.floor(cPrice / detection.priceAtDetection);
       if (multiplier > (detection.lastMultiplier || 1)) {
         detection.lastMultiplier = multiplier;
         newCount++; // Trigger a save
@@ -119,8 +121,8 @@ async function runScan() {
       detectionMap[id] = detection;
     }
 
-    const gainSinceDetection = detection.priceAtDetection > 0
-      ? ((currentPrice - detection.priceAtDetection) / detection.priceAtDetection) * 100 : 0;
+    const gainNow = detection.priceAtDetection > 0
+      ? ((cPrice - detection.priceAtDetection) / detection.priceAtDetection) * 100 : 0;
     const athGain = detection.priceAtDetection > 0
       ? ((detection.ath - detection.priceAtDetection) / detection.priceAtDetection) * 100 : 0;
 
@@ -133,7 +135,7 @@ async function runScan() {
       _detectedMc:         detection.mcAtDetection,
       _ath:                detection.ath,
       _athAt:              detection.athAt,
-      _gainSinceDetection: gainSinceDetection,
+      _gainSinceDetection: gainNow,
       _athGain:            athGain,
     };
   }).sort((a, b) => b._score.total - a._score.total);
