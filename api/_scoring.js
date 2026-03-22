@@ -148,6 +148,55 @@ function scoreToken(token) {
   else if (t3hits >= 1)                     socialScore = 1;
   scores.socialSignal = socialScore;
 
+  // ── 9. EARLY EXPLOSION INDEX (0-10) ──────────────────────────────────────
+  // The $LARRY Signal: $22.5K MC · $81.8K 1h Vol · +577% 1h → 10x from call.
+  // Fires ONLY for micro-MC (<$50K) tokens in the first 60 minutes.
+  // Core insight: Vol/MC ratio >2.0 early = market pricing in a re-rating
+  // before aggregator bots and CT pick it up. Four sub-signals:
+  //   1. Vol/MC ratio     (0-6) — the explosive size mismatch
+  //   2. Age tightness    (0-2) — earlier = more runway
+  //   3. Buy confirmation (0-2, can be -2) — organic vs wash
+  //   4. TX velocity      (0-2) — txns/min as holder momentum proxy
+  // ─────────────────────────────────────────────────────────────────────────
+  let eeiScore = 0;
+  const eeiMcap      = token.marketCap || 0;
+  const eeiFdv       = token.fdv || 0;
+  const eeiBestMcFinal = (eeiMcap > 0 && eeiFdv > 0)
+    ? Math.min(eeiMcap, eeiFdv)
+    : (eeiMcap || eeiFdv);
+
+  if (eeiBestMcFinal > 0 && eeiBestMcFinal < 50000 && ageMins <= 60) {
+    const vol1h_eei  = token.volume?.h1  || 0;
+    const vol24h_eei = token.volume?.h24 || 0;
+    const volMcRatio = vol1h_eei > 0
+      ? vol1h_eei  / eeiBestMcFinal
+      : vol24h_eei / eeiBestMcFinal;
+
+    let volMcBase = 0;
+    if      (volMcRatio >= 5.0) volMcBase = 6;
+    else if (volMcRatio >= 3.0) volMcBase = 5; // $LARRY benchmark ~3.6x
+    else if (volMcRatio >= 2.0) volMcBase = 4;
+    else if (volMcRatio >= 1.0) volMcBase = 2;
+    else if (volMcRatio >= 0.5) volMcBase = 1;
+
+    let ageTightnessBonus = 0;
+    if      (ageMins <= 10) ageTightnessBonus = 2;
+    else if (ageMins <= 20) ageTightnessBonus = 1;
+
+    let eeiByPressBonus = 0;
+    if      (buyRatio >= 0.70) eeiByPressBonus = 2;
+    else if (buyRatio >= 0.60) eeiByPressBonus = 1;
+    else if (buyRatio < 0.45)  eeiByPressBonus = -2;
+
+    const txnsPerMin = ageMins > 0 ? totalTxns / ageMins : 0;
+    let txVelocityBonus = 0;
+    if      (txnsPerMin >= 20) txVelocityBonus = 2; // $LARRY ~18 txns/min
+    else if (txnsPerMin >= 10) txVelocityBonus = 1;
+
+    eeiScore = Math.max(0, Math.min(10, volMcBase + ageTightnessBonus + eeiByPressBonus + txVelocityBonus));
+  }
+  scores.earlyExplosionIndex = eeiScore;
+
   // Mcap modifier + freshness
   const rawTotal = Object.values(scores).reduce((a, b) => a + b, 0);
   let mcapModifier = 0;
