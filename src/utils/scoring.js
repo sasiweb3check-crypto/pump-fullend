@@ -13,16 +13,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const STRATEGY_WEIGHTS = {
-  graduationSpeed: 18,  // Fast BC graduation = organic urgency
-  volumeVelocity:  22,  // Volume size + acceleration
-  priceMultiple:   16,  // Sustained price appreciation
-  buyPressure:     12,  // Buy/sell ratio — real demand signal
-  liquidityDepth:   8,  // Committed liquidity after graduation
-  txFrequency:     12,  // Transaction frequency = community engagement
-  vlEfficiency:     6,  // Volume/liquidity ratio — nichxbt flywheel signal
-  socialSignal:     6,  // Dev/tech narrative keywords
+  graduationSpeed:    18,  // Fast BC graduation = organic urgency
+  volumeVelocity:     22,  // Volume size + acceleration
+  priceMultiple:      16,  // Sustained price appreciation
+  buyPressure:        12,  // Buy/sell ratio — real demand signal
+  liquidityDepth:      8,  // Committed liquidity after graduation
+  txFrequency:        12,  // Transaction frequency = community engagement
+  vlEfficiency:        6,  // Volume/liquidity ratio — nichxbt flywheel signal
+  socialSignal:        6,  // Dev/tech narrative keywords
+  earlyExplosionIndex: 10, // $LARRY pattern: micro-MC × early Vol/MC explosion
 };
-// Total max: 18+22+16+12+8+12+6+6 = 100 ✓
+// Total max: 18+22+16+12+8+12+6+6+10 = 110 → normalized to 100 via freshnessMultiplier
+// EEI adds 10 raw pts so the final scaled score still lands ≤100 for normal tokens
+// and gives exceptional micro-launch coins a meaningful boost to reach S-grade faster
 
 export function scoreToken(token) {
   const scores = {};
@@ -196,6 +199,67 @@ export function scoreToken(token) {
 
   scores.socialSignal = socialScore;
 
+  // ── 9. EARLY EXPLOSION INDEX (0-10) ──────────────────────────────────────
+  // The $LARRY Signal: catches micro-MC coins (<$50K) that are already showing
+  // disproportionate volume relative to their market cap in the first 30 minutes.
+  //
+  // $LARRY at detection: $22.5K MC · $81.8K Vol · +577% in 1h → 10x from call.
+  // The key insight: Vol/MC ratio > 2.0 in the first hour = the market is pricing
+  // in a massive re-rating before DexScreener bots and aggregators pick it up.
+  //
+  // EEI fires ONLY in the early window (≤60 min) at micro MC (<$50K).
+  // It is the "hidden multiplier" that separates a $22.5K→$180K coin from noise.
+  //
+  // Scoring:
+  //   Base score from Vol/MC ratio (how much attention vs size)
+  //   + Age bonus (earlier = more explosive runway)
+  //   + Buy pressure bonus (organic demand, not wash trades)
+  //   + Holder velocity proxy (txns/min as stand-in for holder growth speed)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  let eeiScore = 0;
+  const eeiMcap      = token.marketCap || 0;
+  const eeiFdv       = token.fdv || 0;
+  // Use whichever of marketCap/fdv is non-zero; prefer the smaller (more conservative MC)
+  const eeiBestMcFinal = (eeiMcap > 0 && eeiFdv > 0)
+    ? Math.min(eeiMcap, eeiFdv)
+    : (eeiMcap || eeiFdv);
+
+  if (eeiBestMcFinal > 0 && eeiBestMcFinal < 50000 && ageMins <= 60) {
+    // Vol/MC ratio — the core explosion signal
+    const volMcRatio = vol1h > 0 ? vol1h / eeiBestMcFinal : (vol24h / eeiBestMcFinal);
+    let volMcBase = 0;
+    if      (volMcRatio >= 5.0) volMcBase = 6; // $LARRY-tier: $81K vol on $22.5K mc = 3.6x, this is even stronger
+    else if (volMcRatio >= 3.0) volMcBase = 5; // $LARRY benchmark: ~3.6x in first hour
+    else if (volMcRatio >= 2.0) volMcBase = 4; // Strong: 2x+ vol vs mcap
+    else if (volMcRatio >= 1.0) volMcBase = 2; // Moderate early traction
+    else if (volMcRatio >= 0.5) volMcBase = 1; // Minimal signal
+
+    // Age tightness bonus — coins ≤20 min have max runway
+    let ageTightnessBonus = 0;
+    if      (ageMins <= 10) ageTightnessBonus = 2;
+    else if (ageMins <= 20) ageTightnessBonus = 1;
+    // 20-60 min: no bonus, still qualifies for base score
+
+    // Buy pressure confirmation — distinguishes organic from wash vol
+    let eeiByPressBonus = 0;
+    if      (buyRatio >= 0.70) eeiByPressBonus = 2;
+    else if (buyRatio >= 0.60) eeiByPressBonus = 1;
+    else if (buyRatio < 0.45)  eeiByPressBonus = -2; // Sell-heavy on micro cap = suspicious
+
+    // Transaction velocity bonus — txns/minute as holder momentum proxy
+    // ($LARRY: 627 buys + 460 sells in ~1h = ~18 txns/min)
+    const txnsPerMin = ageMins > 0 ? totalTxns / ageMins : 0;
+    let txVelocityBonus = 0;
+    if      (txnsPerMin >= 20) txVelocityBonus = 2; // $LARRY benchmark
+    else if (txnsPerMin >= 10) txVelocityBonus = 1;
+    // <10 txns/min: no bonus
+
+    eeiScore = Math.max(0, Math.min(10, volMcBase + ageTightnessBonus + eeiByPressBonus + txVelocityBonus));
+  }
+  // Outside window (>60min or mc>50K): EEI stays 0 — avoids rewarding late entries
+  scores.earlyExplosionIndex = eeiScore;
+
   // ── MCAP BONUS/PENALTY (applied after sum) ───────────────────────────────
   // Micro cap with high score = maximum upside opportunity.
   // Fully extended mcap with high score = late, high risk.
@@ -259,6 +323,8 @@ export function getSignalTags(token, scoreResult) {
   if (vlRatio >= 20)                 tags.push({ label: '🌀 V/L Flywheel', type: 'positive' });
   if (mcap > 0 && mcap < 50000)      tags.push({ label: '🟢 Micro Cap',    type: 'positive' });
   if (ageMins <= 30)                 tags.push({ label: '🆕 Just Graduated', type: 'positive' });
+  if (scores.earlyExplosionIndex >= 8) tags.push({ label: '🦞 Larry Signal',  type: 'positive' });
+  if (scores.earlyExplosionIndex >= 5 && scores.earlyExplosionIndex < 8) tags.push({ label: '🔎 EEI Active', type: 'positive' });
 
   // Warning signals
   if (vlRatio > 100 && liquidity < 10000) tags.push({ label: '⚠️ Thin Liq',    type: 'warning' });
@@ -281,8 +347,8 @@ export function getSignalTags(token, scoreResult) {
 // Each condition is evaluated independently so you can see exactly what fired.
 //
 // SIGNAL LEVELS:
-//   STRONG BUY  — 5+ of 7 conditions pass  → pulsing green alert on card
-//   WATCH        — 4 of 7 conditions pass   → amber alert, monitor closely
+//   STRONG BUY  — 6+ of 8 conditions pass  → pulsing green alert on card
+//   WATCH        — 4–5 of 8 conditions pass → amber alert, monitor closely
 //   null         — <4 conditions            → no alert shown
 //
 // CONDITIONS:
@@ -293,6 +359,7 @@ export function getSignalTags(token, scoreResult) {
 //   5. FRESH TOKEN      — age < 60 minutes (first wave, not echo)
 //   6. LIQUID ENOUGH    — liquidity ≥ $8K (can enter and exit cleanly)
 //   7. SCORE GATE       — overall strategy score ≥ 62 (A-grade minimum)
+//   8. LARRY SIGNAL     — EEI ≥ 5 (Vol/MC explosion on micro cap in first hour)
 // ─────────────────────────────────────────────────────────────────────────────
 export function getBuySignal(token, scoreResult) {
   const ageMins   = token.pairCreatedAt ? (Date.now() - token.pairCreatedAt) / 60000 : 9999;
@@ -307,6 +374,7 @@ export function getBuySignal(token, scoreResult) {
   const p1h       = token.priceChange?.h1 || 0;
   const hourlyAvg = vol6h > 0 ? vol6h / 6 : 0;
   const accel     = hourlyAvg > 0 ? vol1h / hourlyAvg : 0;
+  const eeiScore  = scoreResult.scores?.earlyExplosionIndex || 0;
 
   const conditions = [
     {
@@ -351,19 +419,25 @@ export function getBuySignal(token, scoreResult) {
       desc:   `Score ${scoreResult.total}/100`,
       pass:   scoreResult.total >= 62,
     },
+    {
+      id:     'larry',
+      label:  '🦞 Larry Signal',
+      desc:   eeiScore > 0 ? `EEI ${eeiScore}/10` : 'EEI inactive',
+      pass:   eeiScore >= 5,
+    },
   ];
 
   const passCount = conditions.filter(c => c.pass).length;
 
   let level = null;
-  if (passCount >= 5) level = 'STRONG_BUY';
-  else if (passCount === 4) level = 'WATCH';
+  if (passCount >= 6) level = 'STRONG_BUY';
+  else if (passCount >= 4) level = 'WATCH';
 
   if (!level) return null;
 
   return {
     level,        // 'STRONG_BUY' | 'WATCH'
-    passCount,    // how many of 7 fired
+    passCount,    // how many of 8 fired
     conditions,   // full breakdown for tooltip/expand
     firedAt: Date.now(),
   };
