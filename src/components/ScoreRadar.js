@@ -3,12 +3,13 @@ import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } fro
 import { STRATEGY_WEIGHTS } from '../utils/scoring';
 
 const LABELS = {
-  graduationSpeed: 'Grad Speed',
-  volumeVelocity: 'Vol Velocity',
-  priceMultiple: 'Price ×',
-  liquidityDepth: 'Liquidity',
-  txFrequency: 'TX Freq',
-  socialSignal: 'Dev Signal',
+  graduationSpeed:    'Grad Speed',
+  volumeVelocity:     'Vol Velocity',
+  priceMultiple:      'Price ×',
+  liquidityDepth:     'Liquidity',
+  txFrequency:        'TX Freq',
+  socialSignal:       'Dev Signal',
+  earlyExplosionIndex:'🦞 EEI',
 };
 
 export default function ScoreRadar({ scores }) {
