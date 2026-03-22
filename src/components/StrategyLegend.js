@@ -102,6 +102,20 @@ const CRITERIA = [
       { label: 'AI/bot/web3', score: 1, color: '#ff8300' },
     ],
   },
+  {
+    key: 'earlyExplosionIndex',
+    label: '🦞 Early Explosion Index',
+    max: 10,
+    description: 'The $LARRY Signal. Fires ONLY for micro-MC (<$50K) tokens in the first 60 minutes. Catches coins where Vol/MC ratio is already 2x–5x+ of their market cap — the market pricing in a massive re-rating before CT picks it up. $LARRY at detection: $22.5K MC · $81.8K vol · +577% 1h → 10x from call.',
+    thresholds: [
+      { label: 'Vol/MC ≥5x',  score: 6, color: '#00ff8c' },
+      { label: 'Vol/MC ≥3x',  score: 5, color: '#00d4ff' },
+      { label: 'Vol/MC ≥2x',  score: 4, color: '#ffd700' },
+      { label: '+age ≤10min', score: '+2', color: '#a78bfa' },
+      { label: '+buy ≥70%',   score: '+2', color: '#00ff8c' },
+      { label: '+18tx/min',   score: '+2', color: '#ff8300' },
+    ],
+  },
 ];
 
 export default function StrategyLegend() {
@@ -133,7 +147,7 @@ export default function StrategyLegend() {
             background: '#00d4ff11', border: '1px solid #00d4ff33', color: '#00d4ff',
             fontFamily: 'JetBrains Mono',
           }}>
-            $2.1M volume case study · v2
+            $2.1M vol · 9 signals · v3
           </span>
         </div>
         {open ? <ChevronUp size={14} color="#5a7a94" /> : <ChevronDown size={14} color="#5a7a94" />}
@@ -147,7 +161,9 @@ export default function StrategyLegend() {
           }}>
             On Feb 26, 2026, nichxbt reverse-engineered pump.fun's SDK and open-sourced it.
             A community member launched $pump-sdk. Within 48 hours: $2.1M volume, 100K+ txns, 142x from entry.
-            This scanner identifies tokens exhibiting the same 8-signal pattern. Max score: 100pts.
+            Strategy 9 — the <strong style={{color:'#a78bfa'}}>Early Explosion Index</strong> — models the $LARRY pattern:
+            micro-MC coins (&lt;$50K) whose Vol/MC ratio explodes in the first 60 minutes signal a massive re-rating
+            before aggregators catch up. This scanner identifies tokens exhibiting all 9 signals. Max score: 100pts.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '10px' }}>
