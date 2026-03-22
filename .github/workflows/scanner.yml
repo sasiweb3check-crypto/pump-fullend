@@ -2,21 +2,28 @@ name: 24/7 Token Scanner
 
 on:
   schedule:
-    # Runs every 1 minute
+    # Runs every 1 minute (GitHub minimum is 1 minute)
     - cron: '*/1 * * * *'
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - name: Trigger Scanner API (1/2)
         run: |
-          curl -X POST https://scanner-serverless.vercel.app/api/scan -H "Content-Type: application/json"
-      
+          curl -s -o /dev/null -w "HTTP %{http_code}" \
+            -X POST "${{ secrets.VERCEL_APP_URL }}/api/scan" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
+
       - name: Wait 30 seconds
         run: sleep 30
 
       - name: Trigger Scanner API (2/2)
         run: |
-          curl -X POST https://scanner-serverless.vercel.app/api/scan -H "Content-Type: application/json"
+          curl -s -o /dev/null -w "HTTP %{http_code}" \
+            -X POST "${{ secrets.VERCEL_APP_URL }}/api/scan" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
