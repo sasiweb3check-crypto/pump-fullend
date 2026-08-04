@@ -47,15 +47,13 @@ npm start
 
 ## Architecture
 
+> **Full deep-dive:** see [`ARCHITECTURE.md`](./ARCHITECTURE.md) — complete scoring formulas, signal logic, hooks, APIs, and data flows (copy-ready for review).
+
 - **Frontend**: Create React App (React 18) — pure client-side SPA
-- **Data**: All external API calls made directly from the browser
-  - DexScreener — token pairs, prices, volumes (free, no key)
-  - RugCheck.xyz — contract safety analysis (free, no key)
-  - GoPlus Labs — honeypot + tax checks (free, no key)
-  - Groq AI — llama-3.3-70b agent completions (free key required)
-  - Helius — WebSocket + wallet RPC (free key required)
-- **Storage**: localStorage only — all scan history, watchlist, and settings stay in your browser
-- **Serverless**: Zero backend. Vercel just serves the static build. Runs 24/7 for free.
+- **Serverless**: Vercel Functions (`/api/scan`, `/api/tokens`) + Vercel KV; GitHub Actions cron scans every ~30s
+- **Data**: DexScreener, RugCheck, GoPlus, Together AI (Llama-3.3-70B), Helius WS/RPC
+- **Storage**: localStorage for keys, watchlist, bot, guardian; KV for server-side token cache
+- **Scoring**: nichxbt 9-signal engine (graduation, volume velocity, EEI/$LARRY, etc.) → grade S–D
 
 ## What's different from the original
 
