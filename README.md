@@ -1,4 +1,4 @@
-# PUMPSDK Scanner v3 — Serverless
+# Memefish v3 — Serverless
 
 Real-time Solana memecoin scanner. Runs 100% serverless on Vercel. No backend, no server costs.
 
