@@ -55,7 +55,7 @@ export default function Sidebar({ activePage, setActivePage, unreadCount, watchl
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               whiteSpace: 'nowrap', letterSpacing: '-0.02em',
             }}>
-              PUMPSDK
+              MEMEFISH
             </span>
           </div>
         )}

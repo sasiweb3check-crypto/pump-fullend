@@ -163,7 +163,7 @@ export default function App() {
         <div style={{ background: 'linear-gradient(180deg, #0d1520 0%, #060a0f 100%)', borderBottom: '1px solid #1a2535', padding: isMobile ? '12px 16px' : '14px 24px', position: 'sticky', top: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: '800', fontFamily: 'Syne, sans-serif', letterSpacing: '-0.03em', background: 'linear-gradient(90deg, #00ff8c, #00d4ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>PUMPSDK</h1>
+              <h1 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: '800', fontFamily: 'Syne, sans-serif', letterSpacing: '-0.03em', background: 'linear-gradient(90deg, #00ff8c, #00d4ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>MEMEFISH</h1>
               {[
                 { label: 'LIVE', bg: '#00ff8c11', border: '#00ff8c33', color: '#00ff8c' },
                 { label: '8 AI', bg: '#00d4ff11', border: '#00d4ff33', color: '#00d4ff' },

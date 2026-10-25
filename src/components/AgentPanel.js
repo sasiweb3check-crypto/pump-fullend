@@ -35,7 +35,7 @@ When explaining a score, be specific about WHICH numbers drove it and WHAT would
 Max 250 words. Direct, no fluff. Treat the user as a sophisticated trader.`;
 
 // ─── Chat Assistant system prompt ────────────────────────────────────────────
-const CHAT_ASSISTANT_SYSTEM = `You are an AI assistant embedded in a real-time Solana memecoin scanner called PumpSDK Scanner.
+const CHAT_ASSISTANT_SYSTEM = `You are an AI assistant embedded in a real-time Solana memecoin scanner called Memefish.
 
 THE SCANNER:
 - Monitors newly graduated pump.fun/PumpSwap tokens on Solana in real-time
@@ -253,7 +253,7 @@ function ChatTab({ tokens, focusedToken }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Hey! I'm your PumpSDK scanner assistant.\n\nAsk me anything — about token scores, the nichxbt strategy, what S-grade signals look like, or how to use this scanner effectively.\n\nIf you've clicked "Ask AI" on a specific token, I already have its data loaded.`,
+      content: `Hey! I'm your Memefish scanner assistant.\n\nAsk me anything — about token scores, the nichxbt strategy, what S-grade signals look like, or how to use this scanner effectively.\n\nIf you've clicked "Ask AI" on a specific token, I already have its data loaded.`,
     }
   ]);
   const [input, setInput] = useState('');

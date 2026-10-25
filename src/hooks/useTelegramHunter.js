@@ -133,7 +133,7 @@ NICHKT 8-SIGNAL SCORE: ${s.total}/100 (Grade: ${s.grade})
 }
 
 // ── AI hunter system prompt ────────────────────────────────────────────────────
-const HUNTER_SYSTEM = `You are an elite Solana memecoin alpha hunter running the NICHKT PUMP.FUN SDK METHOD inside PUMPSDK Scanner.
+const HUNTER_SYSTEM = `You are an elite Solana memecoin alpha hunter running the NICHKT PUMP.FUN SDK METHOD inside Memefish.
 
 A Telegram message has arrived containing a contract address. You have the live on-chain data and the full 8-signal NICHKT score. Make a fast, decisive call.
 
